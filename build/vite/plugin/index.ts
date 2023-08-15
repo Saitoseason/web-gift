@@ -5,7 +5,7 @@ import legacy from '@vitejs/plugin-legacy'
 import purgeIcons from 'vite-plugin-purge-icons'
 import windiCSS from 'vite-plugin-windicss'
 import VitePluginCertificate from 'vite-plugin-mkcert'
-//import vueSetupExtend from 'vite-plugin-vue-setup-extend';
+import vueSetupExtend from 'vite-plugin-vue-setup-extend'
 import { configHtmlPlugin } from './html'
 import { configPwaConfig } from './pwa'
 import { configMockPlugin } from './mock'
@@ -15,7 +15,8 @@ import { configVisualizerConfig } from './visualizer'
 import { configThemePlugin } from './theme'
 import { configImageminPlugin } from './imagemin'
 import { configSvgIconsPlugin } from './svgSprite'
-
+import importToCDN, { autoComplete } from 'vite-plugin-cdn-import'
+import { visualizer } from 'rollup-plugin-visualizer'
 export function createVitePlugins(viteEnv: ViteEnv, isBuild: boolean) {
   const {
     VITE_USE_IMAGEMIN,
@@ -31,9 +32,42 @@ export function createVitePlugins(viteEnv: ViteEnv, isBuild: boolean) {
     // have to
     vueJsx(),
     // support name
-    //vueSetupExtend(),
+    //2023.6.10补充：该方法会导致本地开发debugger定位错误
+    vueSetupExtend(),
     VitePluginCertificate({
       source: 'coding',
+    }),
+    visualizer({
+      open: true, //注意这里要设置为true，否则无效
+      filename: 'stats.html', //分析图生成的文件名
+      gzipSize: true, // 收集 gzip 大小并将其显示
+      brotliSize: true, // 收集 brotli 大小并将其显示
+    }),
+    importToCDN({
+      prodUrl: 'https://unpkg.com/{name}@{version}/{path}',
+      modules: [
+        {
+          name: 'Vue',
+          var: 'Vue',
+          path: 'https://unpkg.com/vue@3.2.33/dist/vue.global.js',
+        },
+        {
+          name: 'XEUtils',
+          var: 'XEUtils',
+          path: 'https://unpkg.com/xe-utils@3.5.7/dist/xe-utils.umd.min.js',
+        },
+
+        {
+          name: 'VXETable',
+          var: 'VXETable',
+          path: 'https://unpkg.com/vxe-table@4.3.12/lib/index.umd.js',
+        },
+        {
+          name: 'echarts',
+          var: 'echarts',
+          path: 'https://unpkg.com/echarts@5.3.2/dist/echarts.js',
+        },
+      ],
     }),
   ]
 
